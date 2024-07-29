@@ -5,6 +5,7 @@ import requests
 import json
 import datetime as dt
 from dateutil import parser
+import pytz
 
 # Global authentication details. Sensitive information stored as env variables
 FOOTBALL_URI = "https://api.football-data.org/v4/teams/62/matches"
@@ -77,7 +78,10 @@ def update_block(match):
 
 # Create block from fixture details
 def create_block(match):
-    kick_off = parser.isoparse(match["date"])
+
+    # Change to local timezone
+    gb_tz = pytz.timezone("GB")
+    kick_off = parser.isoparse(match["date"]).astimezone(gb_tz)
 
     # Make the start time of block 1hr30min from kick off time, to give me a chance to get to the stadium
     # Add 4 hours from kick off time to prevent people booking in after kick off
