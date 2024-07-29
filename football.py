@@ -77,11 +77,19 @@ def update_block(match):
 
 # Create block from fixture details
 def create_block(match):
+    kick_off = parser.isoparse(match["date"])
+
     # Make the start time of block 1hr30min from kick off time, to give me a chance to get to the stadium
-    start_time = dt.datetime.isoformat(parser.isoparse(match["date"]) - dt.timedelta(hours=1, minutes=30))
     # Add 4 hours from kick off time to prevent people booking in after kick off
-    end_time = dt.datetime.isoformat(parser.isoparse(match["date"]) + dt.timedelta(hours=4))
-    # Create a note on the appointment calendar with the specific fixture details
+    # If kick off time is unrealistic, default to 3pm
+
+    if kick_off.time() < dt.time(12, 0, 0) or kick_off.time() > dt.time(21, 0, 0):
+        start_time = dt.datetime.isoformat(kick_off.replace(hour=13, minute=30))
+        end_time = dt.datetime.isoformat(kick_off.replace(hour=19, minute=00))
+    else:
+        start_time = dt.datetime.isoformat(kick_off - dt.timedelta(hours=1, minutes=30))
+        end_time = dt.datetime.isoformat(kick_off + dt.timedelta(hours=4))
+
     notes = "Everton v " + match["opponent"]
 
     # Initialize data
@@ -116,8 +124,6 @@ for fixture in get_fixtures():
         current_time = dt.datetime.now(dt.timezone.utc)
         if parser.isoparse(fixture["updated"]) >= current_time - dt.timedelta(days=1):
             update_block(fixture)
+            print(fixture["opponent"] + " fixture updated")
     else:
         create_block(fixture)
-
-
-
